@@ -169,14 +169,6 @@ const UserListTable = ({ tableData }) => {
           </div>
         )
       }),
-      columnHelper.accessor('currentPlan', {
-        header: 'Join Date',
-        cell: ({ row }) => (
-          <Typography className='capitalize' color='text.primary'>
-            {row.original.currentPlan}
-          </Typography>
-        )
-      }),
       columnHelper.accessor('status', {
         header: 'Status',
         cell: ({ row }) => (
@@ -199,7 +191,7 @@ const UserListTable = ({ tableData }) => {
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
             <IconButton>
-              <Link href={getLocalizedUrl('/apps/user/view', locale)} className='flex'>
+              <Link href={getLocalizedUrl('/apps/user/viewss', locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
