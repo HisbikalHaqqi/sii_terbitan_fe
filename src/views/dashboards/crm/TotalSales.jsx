@@ -69,11 +69,11 @@ const TotalSales = () => {
   return (
     <Card>
       <CardHeader
-        title='Total Sales'
-        subheader='$21,845'
+        title='Progress Publish'
+        subheader='2024'
         subheaderTypographyProps={{ sx: { color: 'var(--mui-palette-text-primary) !important' } }}
         className='pbe-0'
-        action={<OptionsMenu iconClassName='text-textPrimary' options={['Last 28 Days', 'Last Month', 'Last Year']} />}
+        
       />
       <CardContent>
         <AppReactApexCharts

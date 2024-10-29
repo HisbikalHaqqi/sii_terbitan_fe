@@ -69,13 +69,13 @@ const CardWidgetsSalesOverview = () => {
               offsetY: -15,
               fontWeight: 500,
               fontSize: '24px',
-              formatter: value => `${value}k`,
+              formatter: value => `${value}`,
               color: 'var(--mui-palette-text-primary)'
             },
             total: {
               show: true,
               fontSize: '0.875rem',
-              label: 'Weekly Sales',
+              label: 'All Paper',
               color: textSecondary,
               formatter: value => `${value.globals.seriesTotals.reduce((total, num) => total + num)}k`
             }
@@ -102,13 +102,13 @@ const CardWidgetsSalesOverview = () => {
   return (
     <Card>
       <CardHeader
-        title='Sales Overview'
+        title='Summary Publish'
         action={<OptionsMenu iconClassName='text-textPrimary' options={['Last 28 Days', 'Last Month', 'Last Year']} />}
       />
       <CardContent>
         <Grid container>
           <Grid item xs={12} sm={6} sx={{ mb: [3, 0] }}>
-            <AppReactApexCharts type='donut' height={277} width='100%' series={[12, 25, 13, 50]} options={options} />
+            <AppReactApexCharts type='donut' height={277} width='100%' series={[50, 130, 100, 20]} options={options} />
           </Grid>
           <Grid item xs={12} sm={6} sx={{ my: 'auto' }}>
             <div className='flex items-center gap-3'>
@@ -116,8 +116,8 @@ const CardWidgetsSalesOverview = () => {
                 <i className='ri-wallet-line text-primary' />
               </CustomAvatar>
               <div className='flex flex-col'>
-                <Typography>Number of Sales</Typography>
-                <Typography variant='h5'>$86,400</Typography>
+                <Typography>New Submission</Typography>
+                <Typography variant='h5'>300</Typography>
               </div>
             </div>
             <Divider className='mlb-6' />
@@ -127,36 +127,36 @@ const CardWidgetsSalesOverview = () => {
                   <div>
                     <i className='ri-circle-fill text-[10px] text-primary' />
                   </div>
-                  <Typography>Apparel</Typography>
+                  <Typography>Check</Typography>
                 </div>
-                <Typography className='font-medium'>$12,150</Typography>
+                <Typography className='font-medium'>50 paper</Typography>
               </Grid>
               <Grid item xs={6}>
                 <div className='flex items-center gap-2 mbe-1'>
                   <div>
                     <i className='ri-circle-fill text-[10px] text-primary' />
                   </div>
-                  <Typography>Electronics</Typography>
+                  <Typography>Waiting Publish</Typography>
                 </div>
-                <Typography className='font-medium'>$24,900</Typography>
+                <Typography className='font-medium'>130 paper</Typography>
               </Grid>
               <Grid item xs={6}>
                 <div className='flex items-center gap-2 mbe-1'>
                   <div>
                     <i className='ri-circle-fill text-[10px] text-primary' />
                   </div>
-                  <Typography>FMCG</Typography>
+                  <Typography>Publish</Typography>
                 </div>
-                <Typography className='font-medium'>$12,750</Typography>
+                <Typography className='font-medium'>100 paper</Typography>
               </Grid>
               <Grid item xs={6}>
                 <div className='flex items-center gap-2 mbe-1'>
                   <div>
                     <i className='ri-circle-fill text-[10px] text-primary' />
                   </div>
-                  <Typography>Other Sales</Typography>
+                  <Typography>Paper Reject</Typography>
                 </div>
-                <Typography className='font-medium'>$50,200</Typography>
+                <Typography className='font-medium'>20 Paper</Typography>
               </Grid>
             </Grid>
           </Grid>

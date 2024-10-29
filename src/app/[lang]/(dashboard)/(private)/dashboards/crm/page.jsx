@@ -21,7 +21,7 @@ const DashboardCRM = () => {
       <Grid item xs={12} sm={6} md={3} className='self-end'>
         <CardStatWithImage
           stats='13k'
-          title='Ratings'
+          title='Total Review'
           trendNumber='15.6%'
           chipColor='primary'
           src='/images/illustrations/characters/9.png'
@@ -41,11 +41,8 @@ const DashboardCRM = () => {
       <Grid item xs={12} md={6} className='self-end'>
         <Transactions />
       </Grid>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid item xs={12} sm={6} md={6}>
         <TotalSales />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <RevenueReport />
       </Grid>
       <Grid item xs={12} md={6}>
         <CardWidgetsSalesOverview />
