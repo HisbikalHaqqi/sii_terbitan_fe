@@ -1,34 +1,71 @@
 // Next Imports
-import { NextResponse } from 'next/server'
-
-// Mock data for demo purpose
-import { users } from './users'
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   // Vars
-  const { email, password } = await req.json()
-  const user = users.find(u => u.email === email && u.password === password)
-  let response = null
+  try {
+    const request = await req.json();
 
-  if (user) {
-    const { password: _, ...filteredUserData } = user
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify(request),
+    });
+    const data = await res.json();
 
-    response = {
-      ...filteredUserData
+    console.log(data);
+
+    if (data?.data?.responseCode === 200) {
+      return NextResponse.json(data);
     }
 
-    return NextResponse.json(response)
-  } else {
-    // We return 401 status code and error message if user is not found
+    if (data?.data?.responseCode == 400) {
+      return NextResponse.json(
+        {
+          message: [data?.data?.message],
+        },
+        {
+          status: 400,
+          statusText: "Error Request",
+        }
+      );
+    }
+
+    if (data?.data?.responseCode == 401) {
+      return NextResponse.json(
+        {
+          message: [data?.data?.message],
+        },
+        {
+          status: 401,
+          statusText: "Unauthorized Access",
+        }
+      );
+    }
+
+    if (data?.data?.responseCode == 500) {
+      return NextResponse.json(
+        {
+          message: [data?.data?.message],
+        },
+        {
+          status: 500,
+          statusText: "Internal Server Error",
+        }
+      );
+    }
+  } catch (error) {
     return NextResponse.json(
       {
-        // We create object here to separate each error message for each field in case of multiple errors
-        message: ['Email or Password is invalid']
+        message: ["Service Unavailable"],
       },
       {
-        status: 401,
-        statusText: 'Unauthorized Access'
+        status: 503,
+        statusText: "Service Unavailable",
       }
-    )
+    );
   }
 }
