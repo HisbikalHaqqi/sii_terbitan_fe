@@ -10,7 +10,7 @@ import ProductInventory from '@views/apps/ecommerce/products/add/ProductInventor
 import ProductPricing from '@views/apps/ecommerce/products/add/ProductPricing'
 import ProductOrganize from '@views/apps/ecommerce/products/add/ProductOrganize'
 
-const eCommerceProductsAdd = () => {
+const submissionFormAdd = () => {
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
@@ -33,4 +33,4 @@ const eCommerceProductsAdd = () => {
   )
 }
 
-export default eCommerceProductsAdd
+export default submissionFormAdd

@@ -73,19 +73,22 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         </SubMenu>
         <MenuSection label={dictionary['navigation'].appsPagesAuthor}>
           <SubMenu label={dictionary['navigation'].submission} icon={<i className='ri-lock-2-line' />}>
-            <MenuItem href={`/${locale}/apps/ecommerce/products/add`}>
+            <MenuItem href={`/${locale}/submission/add`}>
               {dictionary['navigation'].submission_add}
             </MenuItem>
-            <MenuItem href={`/${locale}/pages/submission/list_approve`}>
+            <MenuItem href={`/${locale}/submission/list-approval`}>
               {dictionary['navigation'].submission_list_approval}
             </MenuItem>
-            <MenuItem href={`/${locale}/apps/submission/list_reject`}>
+            <MenuItem href={`/${locale}/submission/list-reject`}>
               {dictionary['navigation'].submission_list_reject}
+            </MenuItem>
+            <MenuItem href={`/${locale}/submission/list-all`}>
+              {dictionary['navigation'].submission_list_all}
             </MenuItem>
           </SubMenu>
           <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-user-line' />}>
-            <MenuItem href={`/${locale}/pages/user-profile`}>{dictionary['navigation'].userProfile}</MenuItem>
-            <MenuItem href={`/${locale}/pages/account-settings`}>{dictionary['navigation'].accountSettings}</MenuItem>
+            <MenuItem href={`/${locale}/user-profile`}>{dictionary['navigation'].userProfile}</MenuItem>
+            <MenuItem href={`/${locale}/account-settings`}>{dictionary['navigation'].accountSettings}</MenuItem>
           </SubMenu>
         </MenuSection>
       </Menu>
@@ -99,14 +102,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuSection label={dictionary['navigation'].appsPagesAdmin}>
-          <MenuItem href={`/${locale}/apps/user/list`} icon={<i className='ri-user-line' />}>
+          <MenuItem href={`/${locale}/user/list`} icon={<i className='ri-user-line' />}>
             {dictionary['navigation'].customers}
           </MenuItem>
           <MenuItem href={`/${locale}/apps/ecommerce/products/category`} icon={<i className='ri-car-line' />}>
             {dictionary['navigation'].categories}
           </MenuItem>
-          <MenuItem href={`/${locale}/apps/ecommerce/referrals`} icon={<i className='ri-layout-left-line' />}>
-            {dictionary['navigation'].publisher}
+          <MenuItem  href={`/${locale}/roles`} icon={<i className='ri-lock-2-line' />}>
+            {dictionary['navigation'].roles}
           </MenuItem>
         </MenuSection>
       </Menu>
