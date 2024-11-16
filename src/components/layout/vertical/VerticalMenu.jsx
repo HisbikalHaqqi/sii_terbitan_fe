@@ -63,14 +63,17 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
           "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({ role: role }),
-        cache: "force-cache",
-        next: {
-          revalidate: 1 * 1 * 30,
-        },
+        cache: "no-store",
+        // next: {
+        //   revalidate: 1 * 1 * 30,
+        // },
       });
 
       const data = await res.json();
       const menu = data.dataResponse.data.data;
+
+      console.log("dataaaaaaaa", data);
+      console.log("res------", res);
 
       setMenuData(menu);
     } catch (error) {

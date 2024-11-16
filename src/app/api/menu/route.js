@@ -5,8 +5,6 @@ import { getServerSession } from "next-auth";
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
-
-
   let token;
 
   if (session) {
@@ -15,6 +13,7 @@ export async function POST(req) {
 
   let role = session?.user?.role;
 
+  console.log("role", role);
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/menu/list`,
@@ -30,6 +29,8 @@ export async function POST(req) {
   );
 
   const dataResponse = await response.json();
+
+  console.log(dataResponse);
 
   try {
     if (response.status == 200) {
