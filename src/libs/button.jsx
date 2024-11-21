@@ -22,3 +22,13 @@ export const LoginButton = () => {
     </Button>
   );
 };
+
+export const SubmitButton = () => {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button fullWidth variant="contained" type="submit" disabled={pending}>
+      {pending ? "Submitting..." : "Submit"}
+    </Button>
+  );
+};

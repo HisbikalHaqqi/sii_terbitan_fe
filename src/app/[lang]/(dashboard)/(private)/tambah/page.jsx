@@ -1,13 +1,14 @@
-import { Grid } from "@mui/material";
+// MUI Imports
+import Grid from "@mui/material/Grid";
 
-const CreateForm = () => {
+import CreateForm from "@/views/tambah";
+
+const page = () => {
   return (
-    <Grid container xs>
-      <Grid Item xs>
-        Create
-      </Grid>
+    <Grid container spacing={6}>
+      <CreateForm />
     </Grid>
   );
 };
 
-export default CreateForm;
+export default page;
