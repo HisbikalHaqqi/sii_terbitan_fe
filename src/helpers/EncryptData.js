@@ -18,10 +18,7 @@ export default function EncryptData(params) {
         .concat(encrypted.ciphertext)
         .toString(CryptoJS.enc.Base64);
 
-      // Replace '/' with '_' or any other character you prefer
-      // ciphertext = ciphertext.replace(/\//g, '_');
-
-      return ciphertext;
+        return ciphertext;
     } catch (error) {
       console.error("Error get data:", error);
       return error;

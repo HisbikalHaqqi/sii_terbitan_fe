@@ -14,11 +14,14 @@ import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
+import { toast } from 'react-toastify'
+import { Skeleton, Chip } from '@mui/material'
+
+import { getLocalizedUrl } from '@/utils/i18n'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -29,9 +32,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getFilteredRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
@@ -44,205 +44,28 @@ import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-// Styled Components
-const Icon = styled('i')({})
 
-const fuzzyFilter = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
-
-const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
-  // States
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
-
-// Vars
-const userRoleObj = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
-
+const columnHelper = createColumnHelper()
 const userStatusObj = {
   active: 'success',
-  pending: 'warning',
-  inactive: 'secondary'
+  non_active: 'secondary'
 }
 
-// Column Definitions
-const columnHelper = createColumnHelper()
-
 const UserListTable = ({ tableData }) => {
-  // States
-  const [addUserOpen, setAddUserOpen] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
-  const [filteredData, setFilteredData] = useState(data)
-  const [globalFilter, setGlobalFilter] = useState('')
-
-  // Hooks
+  const [dataAPI, setDataAPI]           = useState([])
+  const [totalRows, setTotalRows]       = useState(0)
+  const [page, setPage]                 = useState(0)
+  const [pageSize, setPageSize]         = useState(5)
+  const [globalFilter, setGlobalFilter] = useState({
+    email: '',
+    role: '',
+  });
+  const [loading, setLoading] = useState(true)
   const { lang: locale } = useParams()
-
-  const columns = useMemo(
-    () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-      columnHelper.accessor('fullName', {
-        header: 'User',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
-                {row.original.fullName}
-              </Typography>
-              <Typography variant='body2'>{row.original.username}</Typography>
-            </div>
-          </div>
-        )
-      }),
-      columnHelper.accessor('email', {
-        header: 'Email',
-        cell: ({ row }) => <Typography>{row.original.email}</Typography>
-      }),
-      columnHelper.accessor('role', {
-        header: 'Role',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Icon
-              className={userRoleObj[row.original.role].icon}
-              sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
-            <Typography className='capitalize' color='text.primary'>
-              {row.original.roleName}
-            </Typography>
-          </div>
-        )
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            <Chip
-              variant='tonal'
-              label={row.original.status}
-              size='small'
-              color={userStatusObj[row.original.status]}
-              className='capitalize'
-            />
-          </div>
-        )
-      }),
-      columnHelper.accessor('action', {
-        header: 'Action',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
-            <IconButton>
-              <Link href={getLocalizedUrl('/apps/user/viewss', locale)} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
-            </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Edit',
-                  icon: 'ri-edit-box-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                }
-              ]}
-            />
-          </div>
-        ),
-        enableSorting: false
-      })
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
-  )
-
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    },
-    enableRowSelection: true, //enable row selection for all rows
-    // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
-  })
 
   const getAvatar = params => {
     const { avatar, fullName } = params
@@ -257,12 +80,200 @@ const UserListTable = ({ tableData }) => {
       )
     }
   }
+  
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('No', {
+        header: 'No',
+        cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : (
+            <div className='flex items-center gap-4'>
+              <div className='flex flex-col'>
+                <Typography className='font-medium' color='text.primary'>
+                  {row.original.id}
+                </Typography>
+            
+              </div>
+            </div>
+          ))
+      }),
+      columnHelper.accessor('fullName', {
+        header: 'User',
+        cell: ({ row }) =>
+        
+        loading ? (
+          <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+        ) : (
+          <div className='flex items-center gap-4'>
+            { getAvatar({ avatar: row.original.imageProfile ,fullName:row.original.full_name})}
+            <div className='flex flex-col'>
+              <Typography className='font-medium' color='text.primary'>
+                {row.original.full_name}
+              </Typography>
+              <Typography variant='body2'>{row.original.phone_number}</Typography>
+            </div>
+          </div>
+        )
+      }),
+      columnHelper.accessor('email', {
+        header: 'Email',
+        cell: ({ row }) => 
+        loading ? (
+          <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+        ) : (
+          <Typography>{row.original.email}</Typography>
+        )
+      }),
+      columnHelper.accessor('role', {
+        header: 'Role',
+        cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : (
+            <div className='flex items-center gap-2'>
+            
+                {/* <Icon
+                  className={userRoleObj[row.original.role].icon}
+                  sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
+                /> */}
+                <Typography className='capitalize' color='text.primary'>
+                  {row.original.role}
+                </Typography>
+              
+            </div>
+          )
+        )
+      }),
+      columnHelper.accessor('status', {
+        header: 'Status',
+        cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : (
+            <div className='flex items-center gap-3'>
+              <Chip
+                variant='tonal'
+                label={row.original.status == 1 ? "Active" : "Non Active"}
+                size='small'
+                color={userStatusObj[row.original.status == 1 ? "active" : "non_active"]}
+                className='capitalize'
+              />
+            </div>
+          )
+        )
+      }),
+      columnHelper.accessor('action', {
+        header: 'Action',
+        cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : (
+            <div className='flex items-center'>
+              <IconButton onClick={() => setData(data?.filter(user => user.id !== row.original.id))}>
+                <i className='ri-delete-bin-7-line text-textSecondary' />
+              </IconButton>
+              <IconButton>
+              <Link href={getLocalizedUrl('/user/preview/'+row.original.id,locale)} className='flex'>
+                  <i className='ri-eye-line text-textSecondary' />
+                </Link>
+              </IconButton>
+            </div>
+          )
+        ),
+        enableSorting: false
+      })
+    ],
+    [dataAPI,loading]
+  )
 
+  const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
+
+    const [value, setValue] = useState(initialValue)
+  
+    useEffect(() => {
+      setValue(initialValue)
+    }, [initialValue])
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+        onChange(value)
+      }, debounce)
+  
+      return () => clearTimeout(timeout)
+  
+    }, [value])
+  
+    return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
+  }
+
+  const table = useReactTable({
+      data: dataAPI,
+      columns,
+      initialState: {
+        pagination: {
+          pageSize: 10
+        }
+      },
+      manualFilters: true,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel()
+  });
+
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const req =  JSON.stringify({
+        request: { "page": page + 1, "size": pageSize, "filter": globalFilter }
+      })
+
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify({
+          url: 'admin/list-user',
+          requestBody: req
+        })
+      });
+
+      const getResponse = await response.json();
+      if (getResponse && getResponse.data) {
+        setDataAPI(getResponse.data.data);
+        setTotalRows(getResponse.data.total);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      toast.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePageChange = (_, page) => {
+    setPage(page) 
+  }
+
+  const handleRowsPerPageChange = e => {
+    const newPageSize = Number(e.target.value)
+    setPageSize(newPageSize) 
+  }
+
+  useEffect(() => {
+      fetchData();  
+
+  }, [page,pageSize]);
+
+
+ 
   return (
     <>
       <Card>
         <CardHeader title='Filters' />
-        <TableFilters setData={setFilteredData} tableData={data} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
@@ -276,13 +287,15 @@ const UserListTable = ({ tableData }) => {
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
+              onChange={value => setGlobalFilter({role:''})}
               placeholder='Search User'
               className='max-sm:is-full'
             />
-            <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
-              Add New User
-            </Button>
+            <Button
+              component={Link}
+              variant='contained'
+              href={getLocalizedUrl('/user/add', locale)}
+            >Tambah Data</Button>
           </div>
         </div>
         <div className='overflow-x-auto'>
@@ -341,27 +354,19 @@ const UserListTable = ({ tableData }) => {
           </table>
         </div>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 50]}
+          rowsPerPageOptions={[5, 10]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
-          rowsPerPage={table.getState().pagination.pageSize}
-          page={table.getState().pagination.pageIndex}
+          count={totalRows}
+          rowsPerPage={pageSize}
+          page={page}
           SelectProps={{
             inputProps: { 'aria-label': 'rows per page' }
           }}
-          onPageChange={(_, page) => {
-            table.setPageIndex(page)
-          }}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
         />
       </Card>
-      <AddUserDrawer
-        open={addUserOpen}
-        handleClose={() => setAddUserOpen(!addUserOpen)}
-        userData={data}
-        setData={setData}
-      />
     </>
   )
 }

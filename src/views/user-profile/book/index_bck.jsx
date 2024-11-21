@@ -1,4 +1,5 @@
-// MUI Imports
+'use client'
+
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -13,12 +14,67 @@ import Chip from '@mui/material/Chip'
 import CustomAvatar from '@core/components/mui/Avatar'
 import OptionMenu from '@core/components/option-menu'
 import Link from '@components/Link'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
-const Teams = ({ data }) => {
+const Teams = ({ data,email }) => {
+
+  const [loading, setLoading] = useState(false);
+  const [dataAPI, setDataAPI] = useState([]);
+
+  const fetchData = async () => {
+    setLoading(true);
+
+    try {
+      const req = JSON.stringify({
+        request: { 
+          "page": 1,
+          "size": 5,
+          "filter": {
+              "user_id": 2,
+              "title": "",
+              "publish_date":""
+          }
+        }
+      });
+
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'paper/by-user-id',
+          requestBody: req
+        })
+      });
+
+      const getResponse = await response.json();
+
+      if (getResponse && getResponse.data) {
+        setDataAPI(getResponse.data);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+
+      toast.error(error.message || 'An error occurred while fetching data');
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData()
+  }, []);
+
   return (
     <Grid container spacing={6}>
-      {data &&
-        data.map((item, index) => {
+      
+      {dataAPI.data &&
+        dataAPI.data.map((item, index) => {
           return (
             <Grid item key={index} xs={12} md={6} lg={4}>
               <Card>
@@ -26,48 +82,29 @@ const Teams = ({ data }) => {
                   <div className='flex items-center justify-between gap-2'>
                     <div className='flex items-center gap-2'>
                       <CustomAvatar size={38} src={item.avatar} />
-                      <Typography variant='h5'>{item.title}</Typography>
+                      <Typography variant='h5'>{item.Paper.title}</Typography>
                     </div>
                     <div className='flex items-center gap-1'>
-                      <IconButton>
-                        <i className='ri-star-line text-textDisabled' />
-                      </IconButton>
                       <OptionMenu
                         iconButtonProps={{
                           size: 'medium',
                           className: 'text-textDisabled'
                         }}
                         options={[
-                          'Rename Team',
                           'View Details',
-                          'Add to Favorite',
-                          { divider: true },
-                          { text: 'Delete Team', menuItemProps: { className: 'text-error' } }
                         ]}
                       />
                     </div>
                   </div>
-                  <Typography>{item.description}</Typography>
+                  <Typography>{item.Paper.abstract}</Typography>
                   <div className='flex items-center justify-between flex-wrap'>
-                    <AvatarGroup
-                      total={item.extraMembers ? item.extraMembers + 3 : 3}
-                      sx={{ '& .MuiAvatar-root': { width: '2rem', height: '2rem', fontSize: '1rem' } }}
-                      className='items-center pull-up'
-                    >
-                      {item.avatarGroup.map((person, index) => {
-                        return (
-                          <Tooltip key={index} title={person.name}>
-                            <Avatar src={person.avatar} alt={person.name} />
-                          </Tooltip>
-                        )
-                      })}
-                    </AvatarGroup>
+                   
                     <div className='flex items-center gap-2'>
-                      {item.chips.map((chip, index) => (
+                      {/* {item.chips.map((chip, index) => (
                         <Link key={index}>
                           <Chip variant='tonal' size='small' label={chip.title} color={chip.color} />
                         </Link>
-                      ))}
+                      ))} */}
                     </div>
                   </div>
                 </CardContent>
