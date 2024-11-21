@@ -120,7 +120,7 @@ const DetailPublisherView = () => {
 
   useEffect(() => {
     fetchData()
-  }, [value]);
+  }, []);
 
   return (
     <Grid container spacing={6}>

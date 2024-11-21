@@ -1,5 +1,6 @@
 // React Imports
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 
 // MUI Imports
 import CardContent from '@mui/material/CardContent'
@@ -8,12 +9,16 @@ import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Button from '@mui/material/Button'
+import Link from 'next/link'
+import { getLocalizedUrl } from '@/utils/i18n'
 
 const TableFilters = ({ setData, tableData }) => {
   // States
   const [role, setRole] = useState('')
   const [plan, setPlan] = useState('')
   const [status, setStatus] = useState('')
+  const { lang: locale } = useParams()
 
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
@@ -90,6 +95,13 @@ const TableFilters = ({ setData, tableData }) => {
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12} sm={4}>
+          <Button
+              component={Link}
+              variant='contained'
+              href={getLocalizedUrl('/user/add', locale)}
+            >Tambah Data</Button>
+          </Grid>
       </Grid>
     </CardContent>
   )

@@ -92,7 +92,7 @@ const ListSubmissionTable = ({ id }) => {
       }),
       columnHelper.accessor('categoryName', {
         header: 'Kategori',
-        cell: ({ row }) => <Typography>{row.original.Paper.category}</Typography>
+        cell: ({ row }) => <Typography>Fiksi</Typography>
       }),
       columnHelper.accessor('jmlh_halaman', {
         header: 'Jumlah Halaman',
@@ -117,16 +117,15 @@ const ListSubmissionTable = ({ id }) => {
         header: 'Action',
         cell: ({ row }) => (
           <div className='flex items-center'>
+      
             <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
+       
             <IconButton>
-              <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
-              <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
-                <i className='ri-delete-bin-7-line text-textPrimary' />
-              </IconButton>
+                <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className="flex">
+                  <i className="ri-eye-line text-textSecondary" />
+                </Link>
             </IconButton>
             
           </div>

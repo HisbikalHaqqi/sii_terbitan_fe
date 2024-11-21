@@ -1,15 +1,15 @@
 // Component Imports
-import ListSubmission from '@/views/submission/list-submission'
+import ListSubmission from '@/views/submission/task-list'
 
 // Data Imports
 import { getUserData } from '@/app/server/actions'
 
 
-const ListSubmissionAll = async () => {
+const ListSubmissionReject = async () => {
   // Vars
   const data = await getUserData()
 
   return <ListSubmission userData={data} />
 }
 
-export default ListSubmissionAll
+export default ListSubmissionReject

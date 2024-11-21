@@ -3,8 +3,6 @@
 // React Imports
 import { useEffect, useState, useMemo } from 'react'
 
-// Next Imports
-import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 // MUI Imports
@@ -14,18 +12,18 @@ import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import { toast } from 'react-toastify'
 import { Skeleton, Chip } from '@mui/material'
+import TableFilters from './TableFilters'
+import Link from 'next/link'
 
 import { getLocalizedUrl } from '@/utils/i18n'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -37,9 +35,6 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import TableFilters from './TableFilters'
-import AddUserDrawer from './AddUserDrawer'
-import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
@@ -64,6 +59,7 @@ const UserListTable = ({ tableData }) => {
     email: '',
     role: '',
   });
+  const [filteredData, setFilteredData] = useState(dataAPI)
   const [loading, setLoading] = useState(true)
   const { lang: locale } = useParams()
 
@@ -164,6 +160,7 @@ const UserListTable = ({ tableData }) => {
           )
         )
       }),
+      
       columnHelper.accessor('action', {
         header: 'Action',
         cell: ({ row }) => (
@@ -274,30 +271,8 @@ const UserListTable = ({ tableData }) => {
     <>
       <Card>
         <CardHeader title='Filters' />
-        <Divider />
-        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-          <Button
-            color='secondary'
-            variant='outlined'
-            startIcon={<i className='ri-upload-2-line text-xl' />}
-            className='max-sm:is-full'
-          >
-            Export
-          </Button>
-          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter({role:''})}
-              placeholder='Search User'
-              className='max-sm:is-full'
-            />
-            <Button
-              component={Link}
-              variant='contained'
-              href={getLocalizedUrl('/user/add', locale)}
-            >Tambah Data</Button>
-          </div>
-        </div>
+          <TableFilters setData={setFilteredData} tableData={dataAPI} />
+       
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
             <thead>

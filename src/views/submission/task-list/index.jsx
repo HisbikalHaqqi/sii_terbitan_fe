@@ -4,7 +4,7 @@ import Grid from '@mui/material/Grid'
 // Component Imports
 import ListSubmissionTable from './ListSubmissionTable'
 
-const ListSubmission = ({ userData }) => {
+const ListTask = ({ userData }) => {
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
@@ -14,4 +14,4 @@ const ListSubmission = ({ userData }) => {
   )
 }
 
-export default ListSubmission
+export default ListTask

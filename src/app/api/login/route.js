@@ -16,8 +16,6 @@ export async function POST(req) {
     });
     const data = await res.json();
 
-    console.log(data);
-
     if (data?.data?.responseCode === 200) {
       return NextResponse.json(data);
     }
