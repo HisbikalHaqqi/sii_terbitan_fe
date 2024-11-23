@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState, useMemo, useEffect } from 'react'
+import { toast } from 'react-toastify'
 
 // Next Imports
 import Link from 'next/link'
@@ -103,51 +104,50 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const RolesTable = ({ tableData }) => {
+const RolesTable = () => {
   // States
-  const [role, setRole] = useState('')
-  const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
-  const [filteredData, setFilteredData] = useState(data)
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [role, setRole]                 = useState([])
+  const [dataAPI, setDataAPI]           = useState([])
+  const [totalRows, setTotalRows]       = useState(0)
+  const [page, setPage]                 = useState(0)
+  const [pageSize, setPageSize]         = useState(5)
+  const [globalFilter, setGlobalFilter] = useState({
+    role: '',
+    email: '',
+  });
+  const [loading, setLoading] = useState(true)
 
   // Hooks
   const { lang: locale } = useParams()
 
   const columns = useMemo(
     () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
+      columnHelper.accessor('No', {
+        header: 'No',
         cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : (
+            <div className='flex items-center gap-4'>
+              <div className='flex flex-col'>
+                <Typography className='font-medium' color='text.primary'>
+                  {row.original.id}
+                </Typography>
+            
+              </div>
+            </div>
+          ))
+      }),
       columnHelper.accessor('fullName', {
         header: 'User',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
+            {getAvatar({ avatar: row.original.profilPicture, fullName: row.original.full_name })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
-                {row.original.fullName}
+                {row.original.full_name}
               </Typography>
-              <Typography variant='body2'>{row.original.username}</Typography>
+              <Typography variant='body2'>{row.original.phone_number}</Typography>
             </div>
           </div>
         )
@@ -160,22 +160,14 @@ const RolesTable = ({ tableData }) => {
         header: 'Role',
         cell: ({ row }) => (
           <div className='flex items-center gap-2'>
-            <Icon
+            {/* <Icon
               className={userRoleObj[row.original.role].icon}
               sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
+            /> */}
             <Typography className='capitalize' color='text.primary'>
               {row.original.role}
             </Typography>
           </div>
-        )
-      }),
-      columnHelper.accessor('currentPlan', {
-        header: 'Plan',
-        cell: ({ row }) => (
-          <Typography className='capitalize' color='text.primary'>
-            {row.original.currentPlan}
-          </Typography>
         )
       }),
       columnHelper.accessor('status', {
@@ -183,12 +175,12 @@ const RolesTable = ({ tableData }) => {
         cell: ({ row }) => (
           <div className='flex items-center gap-3'>
             <Chip
-              variant='tonal'
-              label={row.original.status}
-              size='small'
-              color={userStatusObj[row.original.status]}
-              className='capitalize'
-            />
+                variant='tonal'
+                label={row.original.status == 1 ? "Active" : "Non Active"}
+                size='small'
+                color={userStatusObj[row.original.status == 1 ? "active" : "non_active"]}
+                className='capitalize'
+              />
           </div>
         )
       }),
@@ -204,58 +196,32 @@ const RolesTable = ({ tableData }) => {
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Download',
-                  icon: 'ri-download-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                },
-                {
-                  text: 'Edit',
-                  icon: 'ri-edit-box-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                }
-              ]}
-            />
+            <IconButton>
+              <Link href={getLocalizedUrl('/apps/user/view', locale)} className='flex'>
+                <i className='ri-trash-line text-textSecondary' />
+              </Link>
+            </IconButton>
           </div>
         ),
         enableSorting: false
       })
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
+    [dataAPI,loading]
   )
 
   const table = useReactTable({
-    data: filteredData,
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    },
-    enableRowSelection: true, //enable row selection for all rows
-    // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
+    data: dataAPI,
+      columns,
+      initialState: {
+        pagination: {
+          pageSize: 10
+        }
+      },
+      manualFilters: true,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel()
   })
 
   const getAvatar = params => {
@@ -272,15 +238,54 @@ const RolesTable = ({ tableData }) => {
     }
   }
 
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const req =  JSON.stringify({
+        request: { "page": page + 1, "size": pageSize, "filter": globalFilter }
+      })
+
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify({
+          url: 'admin/list-user',
+          requestBody: req
+        })
+      });
+
+      const getResponse = await response.json();
+      console.log(getResponse)
+      if (getResponse && getResponse.data) {
+        setDataAPI(getResponse.data.data);
+        setTotalRows(getResponse.data.total);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      toast.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePageChange = (_, page) => {
+  
+    setPage(page) 
+
+  }
+
+  const handleRowsPerPageChange = e => {
+    const newPageSize = Number(e.target.value)
+    setPageSize(newPageSize) 
+  }
+
   useEffect(() => {
-    const filteredData = data?.filter(user => {
-      if (role && user.role !== role) return false
+      fetchData();  
 
-      return true
-    })
-
-    setFilteredData(filteredData)
-  }, [role, data, setFilteredData])
+  }, [page,pageSize]);
 
   return (
     <Card>
@@ -314,8 +319,6 @@ const RolesTable = ({ tableData }) => {
               <MenuItem value='admin'>Admin</MenuItem>
               <MenuItem value='author'>Author</MenuItem>
               <MenuItem value='editor'>Editor</MenuItem>
-              <MenuItem value='maintainer'>Maintainer</MenuItem>
-              <MenuItem value='subscriber'>Subscriber</MenuItem>
             </Select>
           </FormControl>
         </div>
@@ -376,19 +379,17 @@ const RolesTable = ({ tableData }) => {
         </table>
       </div>
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
+        rowsPerPageOptions={[5, 10, 20]}
         component='div'
         className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
+        count={totalRows}
+        rowsPerPage={pageSize}
+        page={page}
         SelectProps={{
           inputProps: { 'aria-label': 'rows per page' }
         }}
-        onPageChange={(_, page) => {
-          table.setPageIndex(page)
-        }}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
       />
     </Card>
   )

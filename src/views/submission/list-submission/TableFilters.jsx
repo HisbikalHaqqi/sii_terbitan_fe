@@ -8,6 +8,10 @@ import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Button from '@mui/material/Button'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
+import IconButton from '@mui/material/IconButton'
 
 const TableFilters = ({ setData, tableData }) => {
   // States
@@ -32,7 +36,7 @@ const TableFilters = ({ setData, tableData }) => {
       <Grid container spacing={5}>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id='role-select'>Select Role</InputLabel>
+            <InputLabel id='role-select'>Pilih Kategori</InputLabel>
             <Select
               fullWidth
               id='select-role'
@@ -42,38 +46,26 @@ const TableFilters = ({ setData, tableData }) => {
               labelId='role-select'
               inputProps={{ placeholder: 'Select Role' }}
             >
-              <MenuItem value=''>Select Role</MenuItem>
-              <MenuItem value='admin'>Admin</MenuItem>
-              <MenuItem value='author'>Author</MenuItem>
-              <MenuItem value='editor'>Editor</MenuItem>
-              <MenuItem value='maintainer'>Maintainer</MenuItem>
-              <MenuItem value='subscriber'>Subscriber</MenuItem>
+              <MenuItem value=''>Select Category</MenuItem>
+              <MenuItem value='admin'>Fiksi</MenuItem>
+              <MenuItem value='author'>Politk</MenuItem>
+              <MenuItem value='editor'>Ekonomi</MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id='plan-select'>Select Plan</InputLabel>
-            <Select
-              fullWidth
-              id='select-plan'
-              value={plan}
-              onChange={e => setPlan(e.target.value)}
-              label='Select Plan'
-              labelId='plan-select'
-              inputProps={{ placeholder: 'Select Plan' }}
-            >
-              <MenuItem value=''>Select Plan</MenuItem>
-              <MenuItem value='basic'>Basic</MenuItem>
-              <MenuItem value='company'>Company</MenuItem>
-              <MenuItem value='enterprise'>Enterprise</MenuItem>
-              <MenuItem value='team'>Team</MenuItem>
-            </Select>
+            <TextField
+                fullWidth
+                label='Naskah'
+                type="text"
+                
+              />
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={4} paddingRight={10}>
           <FormControl fullWidth>
-            <InputLabel id='status-select'>Select Status</InputLabel>
+            <InputLabel id='status-select'>Pilih Status</InputLabel>
             <Select
               fullWidth
               id='select-status'
@@ -83,13 +75,34 @@ const TableFilters = ({ setData, tableData }) => {
               labelId='status-select'
               inputProps={{ placeholder: 'Select Status' }}
             >
-              <MenuItem value=''>Select Status</MenuItem>
-              <MenuItem value='pending'>Pending</MenuItem>
-              <MenuItem value='active'>Active</MenuItem>
-              <MenuItem value='inactive'>Inactive</MenuItem>
+              <MenuItem value=''>Pilih Status</MenuItem>
+              <MenuItem value='pending'>DRAFT</MenuItem>
+              <MenuItem value='active'>DITOLAK EDITOR 1</MenuItem>
+              <MenuItem value='inactive'>DITERIMA EDITOR 1</MenuItem>
+              <MenuItem value='active'>DITOLAK EDITOR 2</MenuItem>
+              <MenuItem value='inactive'>DITERIMA EDITOR 2</MenuItem>
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12} sm={3} >
+          <div className='flex flex-col bs-full is-full gap-1.5'>
+            <div className='flex items-start  is-full mbs-1.5 gap-1.5'>
+                <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
+                  Pencarian
+                </Button>
+                <Button
+                  color='secondary'
+                  variant='outlined'
+                  startIcon={<i className='ri-upload-2-line text-xl' />}
+                  className='max-sm:is-full'
+                >
+                Export
+              </Button>
+            </div>
+          
+          </div>
+            
+          </Grid>
       </Grid>
     </CardContent>
   )

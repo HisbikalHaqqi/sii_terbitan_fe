@@ -1,297 +1,248 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo,useEffect } from 'react'
+import TextField from '@mui/material/TextField'
 
 // Next Imports
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { toast } from 'react-toastify'
+
+// MUI Imports
+import CardHeader from '@mui/material/CardHeader'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
+import IconButton from '@mui/material/IconButton'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import { Skeleton, Chip } from '@mui/material'
+import TablePagination from '@mui/material/TablePagination'
+import ConvertDate from '@/helpers/ConvertDate'
+import TableFilters from './TableFilters'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import Divider from '@mui/material/Divider'
-import Button from '@mui/material/Button'
-import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
-import Checkbox from '@mui/material/Checkbox'
-import IconButton from '@mui/material/IconButton'
-import { styled } from '@mui/material/styles'
-import TablePagination from '@mui/material/TablePagination'
+import CardContent from '@mui/material/CardContent'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getFilteredRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
 
-// Component Imports
-import TableFilters from './TableFilters'
-
-import OptionMenu from '@core/components/option-menu'
-import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
 import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-// Styled Components
-const Icon = styled('i')({})
-
-const fuzzyFilter = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
-
-const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
-  // States
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
-
-// Vars
-const userRoleObj = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
-
-const userStatusObj = {
-  active: 'success',
-  pending: 'warning',
-  inactive: 'secondary'
-}
-
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const ListSubmissionTable = ({ tableData }) => {
+const ListSubmissionTable = ({ id }) => {
   // States
-  const [addUserOpen, setAddUserOpen] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
-  const [filteredData, setFilteredData] = useState(data)
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [dataAPI, setDataAPI]           = useState([])
+  const [totalRows, setTotalRows]       = useState(0)
+  const [page, setPage]                 = useState(0)
+  const [pageSize, setPageSize]         = useState(5)
+  const [filteredData, setFilteredData] = useState(dataAPI)
+  const [globalFilter, setGlobalFilter] = useState({
+    "paper_id": '',
+    "status": '',
+    "title": '',
+    "publish_date": '',
+  });
+  const [loading, setLoading] = useState(true)
+  const [anchorEl, setAnchorEl] = useState(null)
+
+  const userStatusObj = {
+    active: 'success',
+    non_active: 'secondary'
+  }
+
+  // Vars
+  const open = Boolean(anchorEl)
 
   // Hooks
   const { lang: locale } = useParams()
 
   const columns = useMemo(
     () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
+      columnHelper.accessor('id', {
+        header: 'No Pengajuan',
         cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-      columnHelper.accessor('fullName', {
-        header: 'User',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
-                {row.original.fullName}
-              </Typography>
-              <Typography variant='body2'>{row.original.username}</Typography>
-            </div>
-          </div>
+          <Typography
+            component={Link}
+            href={getLocalizedUrl(`submission/detail/${row.original.Paper.unique_id}`, locale)}
+            color='primary'
+          >{`${row.original.Paper.unique_id}`}</Typography>
         )
       }),
-      columnHelper.accessor('email', {
-        header: 'Email',
-        cell: ({ row }) => <Typography>{row.original.email}</Typography>
+      columnHelper.accessor('judul_naskah', {
+        header: 'Judul Naskah',
+        cell: ({ row }) => <Typography>{row.original.Paper.title} </Typography>
       }),
-      columnHelper.accessor('role', {
-        header: 'Role',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Icon
-              className={userRoleObj[row.original.role].icon}
-              sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
-            <Typography className='capitalize' color='text.primary'>
-              {row.original.roleName}
-            </Typography>
-          </div>
-        )
+      columnHelper.accessor('categoryName', {
+        header: 'Kategori',
+        cell: ({ row }) => <Typography>{row.original.Paper.category}</Typography>
+      }),
+      columnHelper.accessor('jmlh_halaman', {
+        header: 'Jumlah Halaman',
+        cell: ({ row }) => <Typography>{row.original.Paper.page_range} </Typography>
+      }),
+      columnHelper.accessor('issuedDate', {
+        header: 'Tanggal Pengajuan',
+        cell: ({ row }) => <Typography>{ConvertDate.ConvertDate(row.original.Paper.created_at)}</Typography>
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            <Chip
-              variant='tonal'
-              label={row.original.status}
-              size='small'
-              color={userStatusObj[row.original.status]}
-              className='capitalize'
-            />
-          </div>
-        )
+        cell: ({ row }) =>   
+        <Chip
+          variant='tonal'
+          label='Menunggu Review'
+          size='small'
+          color={userStatusObj["active"]}
+          className='capitalize'
+        />
       }),
-      columnHelper.accessor('action', {
+      columnHelper.accessor('', {
         header: 'Action',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
             <IconButton>
-              <Link href={getLocalizedUrl('/apps/user/viewss', locale)} className='flex'>
+              <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Edit',
-                  icon: 'ri-edit-box-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                }
-              ]}
-            />
+            
           </div>
         ),
         enableSorting: false
       })
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
+    [dataAPI,loading]
   )
 
+  const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
+
+    const [value, setValue] = useState(initialValue)
+  
+    useEffect(() => {
+      setValue(initialValue)
+    }, [initialValue])
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+        onChange(value)
+      }, debounce)
+  
+      return () => clearTimeout(timeout)
+  
+    }, [value])
+  
+    return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
+  }
+
   const table = useReactTable({
-    data: filteredData,
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
+      data: dataAPI,
+      columns,
+      initialState: {
+        pagination: {
+          pageSize: 10
+        }
+      },
+      manualFilters: true,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel()
+  });
+
+  const fetchData = async (id) => {
+    setLoading(true);
+ 
+    try {
+      const req = JSON.stringify({
+        request: { 
+          "page": page + 1, 
+          "size": pageSize,
+          "filter": {
+              "user": id,
+              "title": "",
+              "publish_date":""
+          }
+        }
+      });
+      console.log(req)
+ 
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'paper/by-user-id',
+          requestBody: req
+        })
+      });
+ 
+      const getResponse = await response.json();
+      if (getResponse && getResponse.data) {
+        setDataAPI(getResponse.data.data);
+        setTotalRows(getResponse.data.total);
+      } else {
+        throw new Error('Invalid response from server');
       }
-    },
-    enableRowSelection: true, //enable row selection for all rows
-    // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
-  })
-
-  const getAvatar = params => {
-    const { avatar, fullName } = params
-
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
-    } else {
-      return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName)}
-        </CustomAvatar>
-      )
+    } catch (error) {
+      toast.error(error)
+    } finally {
+      setLoading(false)
     }
+  };
+
+  const handlePageChange = (_, page) => {
+  
+    setPage(page) 
+
+  }
+
+  const handleRowsPerPageChange = e => {
+    const newPageSize = Number(e.target.value)
+    setPageSize(newPageSize) 
+  }
+
+  useEffect(() => {
+      fetchData(id);  
+
+  }, [page,pageSize]);
+
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader title='Filters' />
-        <TableFilters setData={setFilteredData} tableData={data} />
-        <Divider />
-        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-          <Button
-            color='secondary'
-            variant='outlined'
-            startIcon={<i className='ri-upload-2-line text-xl' />}
-            className='max-sm:is-full'
-          >
-            Export
-          </Button>
-          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search User'
-              className='max-sm:is-full'
-            />
-            <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
-              Add New User
-            </Button>
-          </div>
-        </div>
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+    <Card>
+      <CardHeader title='Filters' />
+      <TableFilters setData={setFilteredData} tableData={dataAPI} />
+      <div className='overflow-x-auto'>
+        <table className={tableStyles.table}>
+          <thead>
+          {
+              table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
-                    <th key={header.id}>
+                    <th key={header.id} {...(header.id === 'action' && { className: 'is-24' })}>
                       {header.isPlaceholder ? null : (
                         <>
                           <div
@@ -312,9 +263,12 @@ const ListSubmissionTable = ({ tableData }) => {
                     </th>
                   ))}
                 </tr>
-              ))}
-            </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+              ))
+            }
+          </thead>
+          <tbody>
+          {
+            !dataAPI ? (
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
@@ -322,41 +276,40 @@ const ListSubmissionTable = ({ tableData }) => {
                   </td>
                 </tr>
               </tbody>
-            ) : (
-              <tbody>
-                {table
-                  .getRowModel()
-                  .rows.slice(0, table.getState().pagination.pageSize)
-                  .map(row => {
-                    return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                        {row.getVisibleCells().map(cell => (
-                          <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                        ))}
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            )}
-          </table>
-        </div>
-        <TablePagination
-          rowsPerPageOptions={[10, 25, 50]}
-          component='div'
-          className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
-          rowsPerPage={table.getState().pagination.pageSize}
-          page={table.getState().pagination.pageIndex}
-          SelectProps={{
-            inputProps: { 'aria-label': 'rows per page' }
-          }}
-          onPageChange={(_, page) => {
-            table.setPageIndex(page)
-          }}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
-        />
-      </Card>
-    </>
+            ) :  (
+              table.getRowModel()
+                .rows.slice(0, table.getState().pagination.pageSize)
+                .map(row => (
+                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                    {row.getVisibleCells().map(cell => (
+                      <td
+                        key={cell.id}
+                        {...(cell.id.includes('action') && { className: 'is-24' })}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+            ) }
+
+          </tbody>
+        </table>
+      </div>
+      <TablePagination
+        rowsPerPageOptions={[5, 10]}
+        component='div'
+        className='border-bs'
+        count={totalRows}
+        rowsPerPage={pageSize}
+        page={page}
+        SelectProps={{
+          inputProps: { 'aria-label': 'rows per page' }
+        }}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
+      />
+    </Card>
   )
 }
 

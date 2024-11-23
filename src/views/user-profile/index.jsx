@@ -1,30 +1,74 @@
 'use client'
 
-// React Imports
-import { useState } from 'react'
-
-// MUI Imports
 import Grid from '@mui/material/Grid'
 import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 
-// Component Imports
 import UserProfileHeader from './UserProfileHeader'
 import CustomTabList from '@core/components/mui/TabList'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
-const UserProfile = ({ tabContentList, data }) => {
-  // States
+const UserProfile = ({ tabContentList, email }) => {
+
   const [activeTab, setActiveTab] = useState('profile')
+  const [loading, setLoading] = useState(false);
+  const [dataAPI, setDataAPI] = useState({
+    fullname: '',
+    role: '',
+    birth_date: ''
+  });
 
   const handleChange = (event, value) => {
     setActiveTab(value)
   }
 
+  const fetchData = async () => {
+    setLoading(true);
+
+    try {
+      const req = JSON.stringify({
+        request: { 
+          "email":email
+        }
+      });
+
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'detail-user',
+          requestBody: req
+        })
+      });
+
+      const getResponse = await response.json();
+
+      if (getResponse.status == 200) {
+        setDataAPI(getResponse.data);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+
+      toast.error(error.message || 'An error occurred while fetching data');
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData()
+  }, []);
+
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-        <UserProfileHeader data={data?.profileHeader} />
+        <UserProfileHeader data={dataAPI} />
       </Grid>
       {activeTab === undefined ? null : (
         <Grid item xs={12} className='flex flex-col gap-6'>
@@ -34,7 +78,7 @@ const UserProfile = ({ tabContentList, data }) => {
                 label={
                   <div className='flex items-center gap-1.5'>
                     <i className='ri-user-3-line text-lg' />
-                    Profile
+                    Profil Pengguna
                   </div>
                 }
                 value='profile'
@@ -43,19 +87,28 @@ const UserProfile = ({ tabContentList, data }) => {
                 label={
                   <div className='flex items-center gap-1.5'>
                     <i className='ri-computer-line text-lg' />
-                    Article
+                    Artikel / Buku
                   </div>
                 }
-                value='teams'
+                value='book'
               />
               <Tab
                 label={
                   <div className='flex items-center gap-1.5'>
                     <i className='ri-team-line text-lg' />
-                    Review / Feedback
+                    Pengaturan Akun
                   </div>
                 }
-                value='projects'
+                value='setting'
+              />
+              <Tab
+                label={
+                  <div className='flex items-center gap-1.5'>
+                    <i className='ri-team-line text-lg' />
+                    Pengaturan Keamanan
+                  </div>
+                }
+                value='account'
               />
             </CustomTabList>
 
