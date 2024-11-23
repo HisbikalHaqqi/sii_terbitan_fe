@@ -11,11 +11,8 @@ import { toast } from 'react-toastify'
 
 // MUI Imports
 import CardHeader from '@mui/material/CardHeader'
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
 import { Skeleton, Chip } from '@mui/material'
 import TablePagination from '@mui/material/TablePagination'
 import ConvertDate from '@/helpers/ConvertDate'
@@ -23,7 +20,6 @@ import TableFilters from './TableFilters'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -65,7 +61,7 @@ const ListSubmissionTable = ({ id }) => {
 
   const userStatusObj = {
     active: 'success',
-    non_active: 'secondary'
+    non_active: 'error'
   }
 
   // Vars
@@ -104,15 +100,17 @@ const ListSubmissionTable = ({ id }) => {
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ row }) =>   
-        <Chip
-          variant='tonal'
-          label='Menunggu Review'
-          size='small'
-          color={userStatusObj["active"]}
-          className='capitalize'
-        />
+        cell: ({ row }) => (
+          <Chip
+            variant='tonal'
+            label={row.original.Status.desc_status}
+            size='small'
+            color={([4].includes(row.original.Status.status)) ? userStatusObj['non_active'] : userStatusObj['active']}
+            className='capitalize'
+          />
+        ),
       }),
+      
       columnHelper.accessor('', {
         header: 'Action',
         cell: ({ row }) => (
@@ -124,10 +122,11 @@ const ListSubmissionTable = ({ id }) => {
               <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
-              <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
+              
+            </IconButton>
+            <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
                 <i className='ri-delete-bin-7-line text-textPrimary' />
               </IconButton>
-            </IconButton>
             
           </div>
         ),
@@ -136,25 +135,6 @@ const ListSubmissionTable = ({ id }) => {
     ],
     [dataAPI,loading]
   )
-
-  const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
-
-    const [value, setValue] = useState(initialValue)
-  
-    useEffect(() => {
-      setValue(initialValue)
-    }, [initialValue])
-    useEffect(() => {
-      const timeout = setTimeout(() => {
-        onChange(value)
-      }, debounce)
-  
-      return () => clearTimeout(timeout)
-  
-    }, [value])
-  
-    return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-  }
 
   const table = useReactTable({
       data: dataAPI,
@@ -228,14 +208,6 @@ const ListSubmissionTable = ({ id }) => {
       fetchData(id);  
 
   }, [page,pageSize]);
-
-  const handleClick = event => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
 
   return (
     <Card>

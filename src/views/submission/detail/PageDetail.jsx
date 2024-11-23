@@ -8,7 +8,7 @@ import Grid from '@mui/material/Grid'
 import Details from '@views/submission/detail/Details'
 import Sidebar from '@views/submission/detail/Sidebar'
 
-const PageDetail = ({ id }) => {
+const PageDetail = ({ id,userId }) => {
 
     return (
         <Grid container spacing={6}>
@@ -16,9 +16,9 @@ const PageDetail = ({ id }) => {
                 <Details id={id} />
             </Grid>
             <Grid item xs={12} md={4}>
-            <div className='sticky top-[88px]'>
-                <Sidebar id={id} />
-            </div>
+                <div className='sticky top-[88px]'>
+                    <Sidebar id={id} userId={userId} />
+                </div>
             </Grid>
         </Grid>
     )

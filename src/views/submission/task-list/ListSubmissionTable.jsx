@@ -118,12 +118,14 @@ const ListSubmissionTable = ({ id }) => {
         cell: ({ row }) => (
           <div className='flex items-center'>
       
-            <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
-              <i className='ri-edit-line text-textSecondary' />
+            <IconButton>
+                <Link href={getLocalizedUrl(`submission/task-assign/${row.original.Paper.id}`, locale)} className="flex">
+                  <i className="ri-edit-line text-textSecondary" />
+                </Link>
             </IconButton>
        
             <IconButton>
-                <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className="flex">
+                <Link href={getLocalizedUrl(`submission/detail/${row.original.Paper.id}}`, locale)} className="flex">
                   <i className="ri-eye-line text-textSecondary" />
                 </Link>
             </IconButton>

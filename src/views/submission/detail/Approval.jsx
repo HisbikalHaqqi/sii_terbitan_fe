@@ -119,7 +119,7 @@ const OpenDialogOnElementClick = props => {
     )
 }
 
-const Approval = (data) => {
+const Approval = () => {
     // States
     const [errorState, setErrorState] = useState(null);
     // const [state, formAction] = useFormState;

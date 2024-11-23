@@ -29,7 +29,7 @@ const Timeline = styled(MuiTimeline)({
 
 const approvalPosisi = 1
 
-const Sidebar = ({id}) => {
+const Sidebar = ({id,userId}) => {
 
   const [loading, setLoading] = useState(false);
   const [data, setDataAPI] = useState([]);
@@ -63,7 +63,6 @@ const Sidebar = ({id}) => {
         const getResponse = await response.json();
         if (getResponse && getResponse.data) {
           setDataAPI(getResponse.data.data)
-          console.log(getResponse.data.data)
         } else {
           throw new Error('Invalid response from server')
         }
@@ -92,7 +91,6 @@ const Sidebar = ({id}) => {
                   <CardContent>
                     <Timeline>
                     {
-                   
                       data && data[0] && data[0].ApprovalSubmission && data[0].ApprovalSubmission.approval_list && (
 
                         JSON.parse(data[0].ApprovalSubmission.approval_list).map((approval, index) => (
@@ -109,7 +107,16 @@ const Sidebar = ({id}) => {
                   </CardContent>
                 </Card>
             </Grid>
-            <Approval data={data[0]}/>
+            { 
+              data && 
+              data[0] && 
+              data[0].ApprovalSubmission && 
+              (
+                <Approval data={data[0]} />
+              )
+            }
+
+          
           </Grid>
         }
     </div>
