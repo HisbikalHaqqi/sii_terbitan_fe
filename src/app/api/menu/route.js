@@ -28,9 +28,9 @@ export async function POST(req) {
     }
   );
 
+  console.log("response", response);
   const dataResponse = await response.json();
-
-  console.log(dataResponse);
+  console.log(" data response", dataResponse);
 
   try {
     if (response.status == 200) {

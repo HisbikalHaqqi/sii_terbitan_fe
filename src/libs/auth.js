@@ -35,6 +35,8 @@ export const authOptions = {
 
           const data = await res.json();
 
+          console.log("data----------", data);
+
           if (res.status === 200) {
             return data;
           } else {
@@ -64,6 +66,7 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.data.data.id;
         token.full_name = user.data.data.full_name;
         token.email = user.data.data.email;
         token.role = user.data.data.role;
@@ -74,6 +77,7 @@ export const authOptions = {
 
     async session({ session, token }) {
       if (session.user) {
+        session.user.id = token.id;
         session.user.name = token.full_name;
         session.user.email = token.email;
         session.user.role = token.role;

@@ -33,6 +33,7 @@ import CustomAvatar from "@core/components/mui/Avatar";
 
 // Styled Component Imports
 import AppReactDropzone from "@/libs/styles/AppReactDropzone";
+import { useSession } from "next-auth/react";
 
 // Styled Dropzone Component
 const Dropzone = styled(AppReactDropzone)(({ theme }) => ({
@@ -63,6 +64,8 @@ const ScriptInformation = () => {
   const [error, setError] = useState("");
 
   const theme = useTheme();
+
+  console.log(session);
 
   const refs = {
     title: useRef(null),

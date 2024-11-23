@@ -6,6 +6,8 @@ export async function POST(req) {
   try {
     const request = await req.json();
 
+    console.log("request", request);
+
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, {
       method: "POST",
       headers: {
@@ -16,7 +18,7 @@ export async function POST(req) {
     });
     const data = await res.json();
 
-    console.log(data);
+    console.log("data", data);
 
     if (data?.data?.responseCode === 200) {
       return NextResponse.json(data);
