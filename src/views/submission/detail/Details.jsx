@@ -8,19 +8,14 @@ import Divider from '@mui/material/Divider'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import Typography from '@mui/material/Typography'
-import useMediaQuery from '@mui/material/useMediaQuery'
-import { useTheme } from '@mui/material/styles'
 import { useState,useEffect } from 'react'
 import { toast } from 'react-toastify'
 import Grid from '@mui/material/Grid' 
-// Third-party Imports
-import ReactPlayer from '@/libs/ReactPlayer'
 import ConvertDate from '@/helpers/ConvertDate'
 
 
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
-import CustomIconButton from '@core/components/mui/IconButton'
 import classnames from 'classnames'
 
 const Details = ({id}) => {
