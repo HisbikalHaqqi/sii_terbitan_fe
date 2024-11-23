@@ -63,15 +63,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
           "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({ role: role }),
-        cache: "force-cache",
-        next: {
-          revalidate: 1 * 1 * 30,
-        },
+        cache: "no-store",
+        // next: {
+        //   revalidate: 1 * 1 * 30,
+        // },
       });
-      console.log(res)
+      console.log(res);
 
       const data = await res.json();
       const menu = data.dataResponse.data.data;
+
+      console.log("dataaaaaaaa", data);
+      console.log("res------", res);
 
       setMenuData(menu);
     } catch (error) {
@@ -173,7 +176,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
             {dictionary["navigation"].crm}
           </MenuItem>
         </SubMenu>
-<<<<<<< HEAD
         <MenuSection label={dictionary['navigation'].appsPagesAuthor}>
           <SubMenu label={dictionary['navigation'].submission} icon={<i className='ri-lock-2-line' />}>
             <MenuItem href={`/${locale}/submission/add`}>
@@ -184,42 +186,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
             </MenuItem>
             <MenuItem href={`/${locale}/submission/list-reject`}>
               {dictionary['navigation'].submission_list_reject}
-=======
-        <MenuSection label={dictionary["navigation"].appsPagesAuthor}>
-          <SubMenu
-            label={dictionary["navigation"].submission}
-            icon={<i className="ri-lock-2-line" />}
-          >
-            <MenuItem href={`/${locale}/apps/ecommerce/products/add`}>
-              {dictionary["navigation"].submission_add}
-            </MenuItem>
-            <MenuItem href={`/${locale}/pages/submission/list_approve`}>
-              {dictionary["navigation"].submission_list_approval}
-            </MenuItem>
-            <MenuItem href={`/${locale}/apps/submission/list_reject`}>
-              {dictionary["navigation"].submission_list_reject}
->>>>>>> refs/remotes/origin/main
             </MenuItem>
             <MenuItem href={`/${locale}/submission/list-all`}>
               {dictionary['navigation'].submission_list_all}
             </MenuItem>
           </SubMenu>
-<<<<<<< HEAD
           <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-user-line' />}>
             <MenuItem href={`/${locale}/user-profile`}>{dictionary['navigation'].userProfile}</MenuItem>
             <MenuItem href={`/${locale}/account-settings`}>{dictionary['navigation'].accountSettings}</MenuItem>
-=======
-          <SubMenu
-            label={dictionary["navigation"].pages}
-            icon={<i className="ri-user-line" />}
-          >
-            <MenuItem href={`/${locale}/pages/user-profile`}>
-              {dictionary["navigation"].userProfile}
-            </MenuItem>
-            <MenuItem href={`/${locale}/pages/account-settings`}>
-              {dictionary["navigation"].accountSettings}
-            </MenuItem>
->>>>>>> refs/remotes/origin/main
           </SubMenu>
         </MenuSection>
       </Menu> */}
@@ -237,18 +211,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         renderExpandedMenuItemIcon={{ icon: <i className="ri-circle-line" /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-<<<<<<< HEAD
         <MenuSection label={dictionary['navigation'].appsPagesAdmin}>
           <MenuItem href={`/${locale}/user/list`} icon={<i className='ri-user-line' />}>
             {dictionary['navigation'].customers}
-=======
-        <MenuSection label={dictionary["navigation"].appsPagesAdmin}>
-          <MenuItem
-            href={`/${locale}/apps/user/list`}
-            icon={<i className="ri-user-line" />}
-          >
-            {dictionary["navigation"].customers}
->>>>>>> refs/remotes/origin/main
           </MenuItem>
           <MenuItem
             href={`/${locale}/apps/ecommerce/products/category`}
@@ -256,16 +221,8 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
           >
             {dictionary["navigation"].categories}
           </MenuItem>
-<<<<<<< HEAD
           <MenuItem  href={`/${locale}/roles`} icon={<i className='ri-lock-2-line' />}>
             {dictionary['navigation'].roles}
-=======
-          <MenuItem
-            href={`/${locale}/apps/ecommerce/referrals`}
-            icon={<i className="ri-layout-left-line" />}
-          >
-            {dictionary["navigation"].publisher}
->>>>>>> refs/remotes/origin/main
           </MenuItem>
         </MenuSection>
       </Menu> */}

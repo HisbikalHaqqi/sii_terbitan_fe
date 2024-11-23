@@ -16,21 +16,21 @@ export async function POST(req) {
   console.log("role", role);
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/menu/list`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/logout`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ role: role }),
+      body: JSON.stringify({}),
       cache: "no-store",
     }
   );
 
-  console.log("response", response);
   const dataResponse = await response.json();
-  console.log(" data response", dataResponse);
+
+  console.log(dataResponse);
 
   try {
     if (response.status == 200) {
@@ -42,7 +42,7 @@ export async function POST(req) {
     } else if (response.status == 400) {
       return Response.json({
         status: response.status,
-        message: "Can't Get Menu Data",
+        message: "Can't signout",
       });
     } else if (response.status == 401) {
       return Response.json({

@@ -8,33 +8,31 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 // MUI Imports
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
-import Checkbox from "@mui/material/Checkbox";
-import Button from "@mui/material/Button";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Divider from "@mui/material/Divider";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
 // Third-party Imports
 import classnames from "classnames";
 
 // Component Imports
-import Logo from "@components/layout/shared/Logo";
 import Illustrations from "@components/Illustrations";
+import Logo from "@components/layout/shared/Logo";
 
 // Hook Imports
 import { useImageVariant } from "@core/hooks/useImageVariant";
 import { useSettings } from "@core/hooks/useSettings";
 
 // Util Imports
-import { getLocalizedUrl } from "@/utils/i18n";
-import { useFormState } from "react-dom";
+import { gender } from "@/data/static";
 import { signUpCredentials } from "@/libs/actions";
 import { RegisterButton } from "@/libs/button";
+import { getLocalizedUrl } from "@/utils/i18n";
 import { Alert, Autocomplete } from "@mui/material";
-import { gender } from "@/data/static";
+import { useFormState } from "react-dom";
 
 const RegisterV2 = ({ mode }) => {
   // States
