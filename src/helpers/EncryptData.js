@@ -2,7 +2,7 @@ import CryptoJS from "crypto-js";
 
 export default function EncryptData(params) {
   const iv = CryptoJS.lib.WordArray.random(16);
-  const env = `1n1S4ng4tr4has14`;
+  const env = `${process.env.NEXT_PUBLIC_ENCRYPT_KEY}`
 
   const key = CryptoJS.enc.Utf8.parse(env);
 

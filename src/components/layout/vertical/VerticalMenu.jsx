@@ -68,13 +68,8 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         //   revalidate: 1 * 1 * 30,
         // },
       });
-      console.log(res);
-
       const data = await res.json();
       const menu = data.dataResponse.data.data;
-
-      console.log("dataaaaaaaa", data);
-      console.log("res------", res);
 
       setMenuData(menu);
     } catch (error) {

@@ -1,8 +1,8 @@
 'use client'
 
 // React Imports
-import { useState, useMemo,useEffect } from 'react'
-import TextField from '@mui/material/TextField'
+import { useState, useMemo,useEffect, useCallback } from 'react'
+import EncryptData from '@/helpers/EncryptData'
 
 // Next Imports
 import Link from 'next/link'
@@ -17,6 +17,7 @@ import { Skeleton, Chip } from '@mui/material'
 import TablePagination from '@mui/material/TablePagination'
 import ConvertDate from '@/helpers/ConvertDate'
 import TableFilters from './TableFilters'
+import DecryptData from '@/helpers/DecryptData';
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -39,33 +40,46 @@ import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
+import ConfirmDialog from '@/views/apps/component/CompDelete'
 
 // Column Definitions
 const columnHelper = createColumnHelper()
 
 const ListSubmissionTable = ({ id }) => {
   // States
-  const [dataAPI, setDataAPI]           = useState([])
-  const [totalRows, setTotalRows]       = useState(0)
-  const [page, setPage]                 = useState(0)
-  const [pageSize, setPageSize]         = useState(5)
-  const [filteredData, setFilteredData] = useState(dataAPI)
-  const [globalFilter, setGlobalFilter] = useState({
-    "paper_id": '',
-    "status": '',
-    "title": '',
-    "publish_date": '',
+  const [dataAPI, setDataAPI]             = useState([])
+  const [totalRows, setTotalRows]         = useState(0)
+  const [page, setPage]                   = useState(0)
+  const [pageSize, setPageSize]           = useState(5)
+  const [activeFilters, setActiveFilters] = useState({
+    title: '',
+    publish_date: '',
+    status: 0,
+    paper_id: 0,
+    category:0,
+    status:0,
   });
-  const [loading, setLoading] = useState(true)
-  const [anchorEl, setAnchorEl] = useState(null)
+  const [loading, setLoading]               = useState(true)
+  const [open, setOpen]                     = useState(false);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [idDelete, setIdDelete]             = useState(null); 
+
+  const handleClickOpen = useCallback((id) => {
+    if (id !== idDelete) { 
+      setIdDelete(id); 
+      setOpen(true);   
+    }
+  }, [idDelete]);
+
+  const handleClose = () => {
+    setIdDelete(0)
+    setOpen(false);
+  };
 
   const userStatusObj = {
     active: 'success',
     non_active: 'error'
   }
-
-  // Vars
-  const open = Boolean(anchorEl)
 
   // Hooks
   const { lang: locale } = useParams()
@@ -75,67 +89,96 @@ const ListSubmissionTable = ({ id }) => {
       columnHelper.accessor('id', {
         header: 'No Pengajuan',
         cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
           <Typography
-            component={Link}
-            href={getLocalizedUrl(`submission/detail/${row.original.Paper.unique_id}`, locale)}
             color='primary'
-          >{`${row.original.Paper.unique_id}`}</Typography>
+          >{`${row.original.Paper.unique_id}`}</Typography>)
         )
       }),
       columnHelper.accessor('judul_naskah', {
         header: 'Judul Naskah',
-        cell: ({ row }) => <Typography>{row.original.Paper.title} </Typography>
+        cell: ({ row }) =>
+           
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.title} </Typography>)
       }),
       columnHelper.accessor('categoryName', {
         header: 'Kategori',
-        cell: ({ row }) => <Typography>{row.original.Paper.category}</Typography>
+        cell: ({ row }) => 
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.category_name}</Typography>)
       }),
       columnHelper.accessor('jmlh_halaman', {
         header: 'Jumlah Halaman',
-        cell: ({ row }) => <Typography>{row.original.Paper.page_range} </Typography>
+        cell: ({ row }) => 
+         loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.page_range} </Typography>)
       }),
       columnHelper.accessor('issuedDate', {
         header: 'Tanggal Pengajuan',
-        cell: ({ row }) => <Typography>{ConvertDate.ConvertDate(row.original.Paper.created_at)}</Typography>
+        cell: ({ row }) => 
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{ConvertDate.ConvertDate(row.original.Paper.created_at)}</Typography>)
       }),
       columnHelper.accessor('status', {
         header: 'Status',
         cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
           <Chip
             variant='tonal'
             label={row.original.Status.desc_status}
             size='small'
             color={([4].includes(row.original.Status.status)) ? userStatusObj['non_active'] : userStatusObj['active']}
             className='capitalize'
-          />
+          />)
         ),
       }),
-      
       columnHelper.accessor('', {
         header: 'Action',
         cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
           <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
-              <i className='ri-edit-line text-textSecondary' />
-            </IconButton>
+      
             <IconButton>
-              <Link href={getLocalizedUrl(`submission/detail/${row.original.id}`, locale)} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
-              
+                <Link href={getLocalizedUrl(`submission/edit/${EncryptData(row.original.Paper.id)}`, locale)} className="flex">
+                  <i className="ri-edit-line text-textSecondary" />
+                </Link>
             </IconButton>
-            <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
-                <i className='ri-delete-bin-7-line text-textPrimary' />
-              </IconButton>
-            
+       
+            <IconButton>
+                <Link href={getLocalizedUrl(`submission/detail/${EncryptData(row.original.Paper.id)}`,locale)} className="flex">
+                  <i className="ri-eye-line text-textSecondary" />
+                </Link>
+            </IconButton>
+            <IconButton onClick={()=>{handleClickOpen(EncryptData(row.original.Paper.id))}}>
+              <i className="ri-delete-bin-7-line text-gray-500" />
+            </IconButton>
           </div>
+          )
         ),
         enableSorting: false
       })
     ],
     [dataAPI,loading]
   )
-
+  
   const table = useReactTable({
       data: dataAPI,
       columns,
@@ -160,13 +203,14 @@ const ListSubmissionTable = ({ id }) => {
           "page": page + 1, 
           "size": pageSize,
           "filter": {
-              "user": id,
-              "title": "",
-              "publish_date":""
+            "title": activeFilters.title,
+            "publish_date": activeFilters.publish_date,
+            "paper_id": activeFilters.paper_id,
+            "status": activeFilters.status,
+            "category":activeFilters.category
           }
         }
       });
-      console.log(req)
  
       const response = await fetch('/api/user', {
         method: 'POST',
@@ -174,7 +218,7 @@ const ListSubmissionTable = ({ id }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: 'paper/by-user-id',
+          url: 'paper/list',
           requestBody: req
         })
       });
@@ -209,10 +253,72 @@ const ListSubmissionTable = ({ id }) => {
 
   }, [page,pageSize]);
 
+
+  const handleConfirm = async () => {
+
+    if (idDelete != 0){
+      setLoadingConfirm(true);
+
+      try {
+        var getIdDecrypt = DecryptData(idDelete)
+        const reqBody = JSON.stringify({
+          request:{
+              id: parseInt(getIdDecrypt),
+          }
+        });
+  
+        const response = await fetch('/api/user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: 'paper/delete',
+            requestBody: reqBody,
+          }),
+        });
+  
+        const getResponse = await response.json()
+        if (getResponse.status === 200) {
+        
+          toast.success('Berhasil menghapus naskah!')
+          setLoadingConfirm(false)
+          handleClose()
+          fetchData()
+  
+        } else {
+          setLoadingConfirm(false)
+          toast.error('Invalid Data')
+        }
+          
+      } catch (error) {
+        setLoadingConfirm(false);
+        toast.error('Terjadi kesalahan coba kembali lagi nanti');
+      }
+    }
+   
+  };
+
   return (
     <Card>
+
+      <ConfirmDialog 
+        open={open}
+        handleClose={handleClose}
+        handleConfirm={handleConfirm}
+        loading={loadingConfirm}
+      />
+
       <CardHeader title='Filters' />
-      <TableFilters setData={setFilteredData} tableData={dataAPI} />
+      <TableFilters 
+          setData={setDataAPI} 
+          tableData={dataAPI} 
+          setTotalRows={setTotalRows} 
+          pageSize={pageSize} 
+          page={page}
+          activeFilters={activeFilters}
+          setActiveFilters={setActiveFilters}
+      />
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
           <thead>

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import AsyncSelect from 'react-select/async';
 import { Grid, IconButton, CircularProgress, FormHelperText, FormControl } from '@mui/material';
 import { Controller } from 'react-hook-form';
+import EncryptData from '@/helpers/EncryptData';
 
-const CompApproval = ({ url, control, errors }) => {
+const CompApproval = ({ control, errors, setValue }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,17 +19,17 @@ const CompApproval = ({ url, control, errors }) => {
     menu: (base) => ({
       ...base,
       maxHeight: 300,
+      zIndex: 9999,
     }),
     option: (base) => ({
       ...base,
       height: 40,
       zIndex: 9999,
-      
     }),
     menuList: (base) => ({
-        ...base,
-        zIndex: 9999,
-      }),
+      ...base,
+      zIndex: 9999,
+    }),
   };
 
   const fetchOptions = async (inputValue) => {
@@ -38,16 +39,28 @@ const CompApproval = ({ url, control, errors }) => {
     setError(null);
 
     try {
-      const response = await fetch(`https://jsonplaceholder.typicode.com/users?name_like=${inputValue}`);
-      if (!response.ok) throw new Error('Failed to fetch data');
+      const req = JSON.stringify({
+        request: { "page": 1, "size": 10, "filter": { "name": inputValue } }
+      });
 
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'admin/list-user',
+          requestBody: req
+        })
+      });
+
+      if (!response) throw new Error('Failed to fetch data');
       const data = await response.json();
-      return data.map((user) => ({
-        label: user.name,
-        value: user.id,
+      const users = data.data.data;
+
+      return users.map(user => ({
+        label: `${user.full_name} (ROLE : ${user.role})`,
+        value: EncryptData(user.id + "|" + user.full_name + "|"+user.role),
       }));
     } catch (error) {
-      console.error('Error fetching data:', error);
       setError('Error loading data, please try again later');
       return [];
     } finally {
@@ -55,14 +68,10 @@ const CompApproval = ({ url, control, errors }) => {
     }
   };
 
-  // Handle the change in each AsyncSelect
   const handleChange = (selectedOption, selectIndex) => {
-    if (
-      selectedOption &&
-      selectedOptions.some(
-        (option, index) => option?.value === selectedOption.value && index !== selectIndex
-      )
-    ) {
+    if (!selectedOption) return;
+
+    if (selectedOptions.some((option, index) => option?.value === selectedOption.value && index !== selectIndex)) {
       setError('User review tidak boleh sama');
       return;
     }
@@ -70,43 +79,49 @@ const CompApproval = ({ url, control, errors }) => {
     const newSelectedOptions = [...selectedOptions];
     newSelectedOptions[selectIndex] = selectedOption;
     setSelectedOptions(newSelectedOptions);
+    
+    setValue(`approval[${selectIndex}]`, selectedOption);
+
     setError(null);
   };
 
-  // Clone a new select component
   const handleCloneSelect = () => {
     setSelectCount(selectCount + 1);
     setSelectedOptions([...selectedOptions, null]);
   };
 
-  // Delete a select component
   const handleDeleteSelect = (selectIndex) => {
     if (selectCount <= 1) return;
     const newSelectCount = selectCount - 1;
     const newSelectedOptions = selectedOptions.filter((_, index) => index !== selectIndex);
     setSelectCount(newSelectCount);
     setSelectedOptions(newSelectedOptions);
+    
+    setValue(`approval[${selectIndex}]`, null);
   };
 
   return (
-    <div>
+    <div style={{zIndex:1000}}>
+
       {[...Array(selectCount)].map((_, index) => (
+      
         <Grid container spacing={5} key={index}>
           <Grid item xs={12} sm={10} padding={2}>
             <FormControl fullWidth error={!!errors?.approval?.[index]}>
               <Controller
-                name={`approval[${index}]`} // Dynamic name for each select
+                name={`approval[${index}]`} 
                 control={control}
-                rules={{ required: 'Kolom harus diisi.' }} // Add validation rules here
+                rules={{ required: 'Kolom harus diisi.' }}
                 render={({ field }) => (
                   <AsyncSelect
+                    id={index}
                     {...field}
                     styles={customStyles}
                     cacheOptions
                     loadOptions={fetchOptions}
                     defaultOptions
                     onChange={(selectedOption) => handleChange(selectedOption, index)}
-                    value={selectedOptions[index] || null}
+                    value={selectedOptions[index] || null}  // Ensure the right value is selected
                     isClearable
                     placeholder="Cari User Reviewer"
                     noOptionsMessage={() => 'Data tidak ditemukan'}
@@ -117,7 +132,6 @@ const CompApproval = ({ url, control, errors }) => {
                   />
                 )}
               />
-              {/* Show error message based on react-hook-form validation */}
               {errors?.approval?.[index] && (
                 <FormHelperText>{errors.approval[index]?.message}</FormHelperText>
               )}
@@ -130,11 +144,12 @@ const CompApproval = ({ url, control, errors }) => {
                 <i className="ri-delete-bin-7-line text-textSecondary" />
               </IconButton>
             )}
-            <IconButton onClick={() => handleCloneSelect(index)} size="large">
+            <IconButton onClick={() => handleCloneSelect()} size="large">
               <i className="ri-user-add-line text-textSecondary" />
             </IconButton>
           </Grid>
         </Grid>
+      
       ))}
     </div>
   );

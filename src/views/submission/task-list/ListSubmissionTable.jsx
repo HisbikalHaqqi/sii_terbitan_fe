@@ -2,7 +2,7 @@
 
 // React Imports
 import { useState, useMemo,useEffect } from 'react'
-import TextField from '@mui/material/TextField'
+import EncryptData from '@/helpers/EncryptData'
 
 // Next Imports
 import Link from 'next/link'
@@ -11,11 +11,8 @@ import { toast } from 'react-toastify'
 
 // MUI Imports
 import CardHeader from '@mui/material/CardHeader'
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
 import { Skeleton, Chip } from '@mui/material'
 import TablePagination from '@mui/material/TablePagination'
 import ConvertDate from '@/helpers/ConvertDate'
@@ -23,7 +20,6 @@ import TableFilters from './TableFilters'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -53,23 +49,21 @@ const ListSubmissionTable = ({ id }) => {
   const [totalRows, setTotalRows]       = useState(0)
   const [page, setPage]                 = useState(0)
   const [pageSize, setPageSize]         = useState(5)
-  const [filteredData, setFilteredData] = useState(dataAPI)
-  const [globalFilter, setGlobalFilter] = useState({
-    "paper_id": '',
-    "status": '',
-    "title": '',
-    "publish_date": '',
+  const [activeFilters, setActiveFilters] = useState({
+    title: '',
+    publish_date: '',
+    status: 0,
+    paper_id: 0,
+    category:0,
+    status:0,
   });
   const [loading, setLoading] = useState(true)
   const [anchorEl, setAnchorEl] = useState(null)
 
   const userStatusObj = {
     active: 'success',
-    non_active: 'secondary'
+    non_active: 'error'
   }
-
-  // Vars
-  const open = Boolean(anchorEl)
 
   // Hooks
   const { lang: locale } = useParams()
@@ -79,84 +73,94 @@ const ListSubmissionTable = ({ id }) => {
       columnHelper.accessor('id', {
         header: 'No Pengajuan',
         cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
           <Typography
-            component={Link}
-            href={getLocalizedUrl(`submission/detail/${row.original.Paper.unique_id}`, locale)}
             color='primary'
-          >{`${row.original.Paper.unique_id}`}</Typography>
+          >{`${row.original.Paper.unique_id}`}</Typography>)
         )
       }),
       columnHelper.accessor('judul_naskah', {
         header: 'Judul Naskah',
-        cell: ({ row }) => <Typography>{row.original.Paper.title} </Typography>
+        cell: ({ row }) =>
+           
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.title} </Typography>)
       }),
       columnHelper.accessor('categoryName', {
         header: 'Kategori',
-        cell: ({ row }) => <Typography>Fiksi</Typography>
+        cell: ({ row }) => 
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.category_name}</Typography>)
       }),
       columnHelper.accessor('jmlh_halaman', {
         header: 'Jumlah Halaman',
-        cell: ({ row }) => <Typography>{row.original.Paper.page_range} </Typography>
+        cell: ({ row }) => 
+         loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{row.original.Paper.page_range} </Typography>)
       }),
       columnHelper.accessor('issuedDate', {
         header: 'Tanggal Pengajuan',
-        cell: ({ row }) => <Typography>{ConvertDate.ConvertDate(row.original.Paper.created_at)}</Typography>
+        cell: ({ row }) => 
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (<Typography>{ConvertDate.ConvertDate(row.original.Paper.created_at)}</Typography>)
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ row }) =>   
-        <Chip
-          variant='tonal'
-          label='Menunggu Review'
-          size='small'
-          color={userStatusObj["active"]}
-          className='capitalize'
-        />
+        cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
+          <Chip
+            variant='tonal'
+            label={row.original.Status.desc_status}
+            size='small'
+            color={([4].includes(row.original.Status.status)) ? userStatusObj['non_active'] : userStatusObj['active']}
+            className='capitalize'
+          />)
+        ),
       }),
       columnHelper.accessor('', {
         header: 'Action',
         cell: ({ row }) => (
+          loading ? (
+            <Skeleton animation={'wave'} sx={{ bgcolor: '#DEE9FA' }} variant='text' width={120} />
+          ) : 
+          (
           <div className='flex items-center'>
       
             <IconButton>
-                <Link href={getLocalizedUrl(`submission/task-assign/${row.original.Paper.id}`, locale)} className="flex">
+                <Link href={getLocalizedUrl(`submission/task-assign/${EncryptData(row.original.Paper.id)}`, locale)} className="flex">
                   <i className="ri-edit-line text-textSecondary" />
                 </Link>
             </IconButton>
        
             <IconButton>
-                <Link href={getLocalizedUrl(`submission/detail/${row.original.Paper.id}}`, locale)} className="flex">
+                <Link href={getLocalizedUrl(`submission/detail/${EncryptData(row.original.Paper.id)}`,locale)} className="flex">
                   <i className="ri-eye-line text-textSecondary" />
                 </Link>
             </IconButton>
             
           </div>
+          )
         ),
         enableSorting: false
       })
     ],
     [dataAPI,loading]
   )
-
-  const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
-
-    const [value, setValue] = useState(initialValue)
   
-    useEffect(() => {
-      setValue(initialValue)
-    }, [initialValue])
-    useEffect(() => {
-      const timeout = setTimeout(() => {
-        onChange(value)
-      }, debounce)
-  
-      return () => clearTimeout(timeout)
-  
-    }, [value])
-  
-    return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-  }
-
   const table = useReactTable({
       data: dataAPI,
       columns,
@@ -181,13 +185,14 @@ const ListSubmissionTable = ({ id }) => {
           "page": page + 1, 
           "size": pageSize,
           "filter": {
-              "user": id,
-              "title": "",
-              "publish_date":""
+            "title": activeFilters.title,
+            "publish_date": activeFilters.publish_date,
+            "paper_id": activeFilters.paper_id,
+            "status": activeFilters.status,
+            "category":activeFilters.category
           }
         }
       });
-      console.log(req)
  
       const response = await fetch('/api/user', {
         method: 'POST',
@@ -195,7 +200,7 @@ const ListSubmissionTable = ({ id }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: 'paper/by-user-id',
+          url: 'paper/list',
           requestBody: req
         })
       });
@@ -241,7 +246,17 @@ const ListSubmissionTable = ({ id }) => {
   return (
     <Card>
       <CardHeader title='Filters' />
-      <TableFilters setData={setFilteredData} tableData={dataAPI} />
+      <TableFilters 
+          setData={setDataAPI} 
+          tableData={dataAPI} 
+          setTotalRows={setTotalRows} 
+          pageSize={pageSize} 
+          page={page}
+          activeFilters={activeFilters}
+          setActiveFilters={setActiveFilters}
+      />
+
+
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
           <thead>

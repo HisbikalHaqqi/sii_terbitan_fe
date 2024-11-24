@@ -1,228 +1,173 @@
-import React from 'react'
-import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
+import React, { useState } from 'react';
+import Card from '@mui/material/Card';
+import Grid from '@mui/material/Grid';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 import TextField from "@mui/material/TextField";
-import { useState, Fragment,useEffect } from 'react'
-import { Controller, useForm } from "react-hook-form";
-import { valibotResolver } from "@hookform/resolvers/valibot";
-import { object, string, pipe, nonEmpty } from "valibot";
 import Button from "@mui/material/Button";
-import Typography from '@mui/material/Typography'
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import DecryptData from '@/helpers/DecryptData';
+import { Dialog, DialogActions, DialogContent, CircularProgress, DialogTitle } from '@mui/material';
+import { Controller, useForm } from 'react-hook-form';
 
-import Dialog from '@mui/material/Dialog'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import IconButton from '@mui/material/IconButton'
-import { toast } from 'react-toastify'
-import classnames from 'classnames'
+const Approval = ({ id }) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState(null);
+  const { data: session } = useSession();
+  const router = useRouter();
 
-const buttonProps = (variant, rel, className) => ({
-    variant,
-    rel,
-    className: `${className} text-[22px] text-textSecondary`
-  })
-
-const schema = object({
-    catatan: pipe(
-      string(),
-      nonEmpty("Catatan Harus Diisi"),
-    ),
+  const { control, handleSubmit, formState: { errors }, getValues } = useForm({
+    defaultValues: {
+      catatan: '',
+    },
   });
 
-const ConfirmationDialog = ({ open, setOpen, type, dataId, setData, data }) => {
-    const [secondDialog, setSecondDialog] = useState(false)
-    const [userInput, setUserInput] = useState(false)
-  
-    console.log('setData confirm', setData)
-    console.log('data confirm', data)
-  
-    const Wrapper = type === 'suspend-account' ? 'div' : Fragment
-  
-    const handleSecondDialogClose = () => {
-      setSecondDialog(false)
-      setOpen(false)
-    }
-  
-    const handleConfirmation = async value => {
-      if (value) {
-        toast.info("Successs")
-        // const data = await DeleteData(dataId)
-        // console.log('data handleconfirmation', data)
-  
-        // setData(await getDatas(2, 10))
-  
-        setUserInput(value)
-        setSecondDialog(true)
-        setOpen(false)
-      } else {
-        setUserInput(value)
-        setSecondDialog(true)
-        setOpen(false)
-      }
-    }
-  
-    useEffect(() => {
-      if (!open && userInput) {
-      }
-    }, [open, userInput])
-  
-    return (
-      <>
-        <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)}>
-          <DialogContent className='flex items-center flex-col text-center pbs-10 pbe-6 pli-10 sm:pbs-16 sm:pbe-6 sm:pli-16'>
-            <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
-            <Wrapper>
-              <Typography variant='h5'>
-                {type === 'submit-data' && 'Apakah kamu yakin ingin memberikan persetujuan ini?'}
-              </Typography>
-            </Wrapper>
-          </DialogContent>
-          <DialogActions className='gap-2 justify-center pbs-0 pbe-10 pli-10 sm:pbe-16 sm:pli-16'>
-            <Button variant='contained' onClick={() => handleConfirmation(true)}>
-              {type === 'submit-data' ? 'Iya, Simpan data' : 'Tidak'}
-            </Button>
-            <Button
-              variant='outlined'
-              color='secondary'
-              onClick={() => {
-                handleConfirmation(false)
-              }}
-            >
-              Batalkan
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </>
-    )
-}
-const OpenDialogOnElementClick = props => {
-    const { element: Element, dialog: Dialog, elementProps, dialogProps, dataId, data, setData } = props
-  
-    const [open, setOpen] = useState(false)
-  
-    console.log('data confirm open click', data)
-  
-    const { onClick: elementOnClick, ...restElementProps } = elementProps
-  
-    const handleOnClick = e => {
-      elementOnClick && elementOnClick(e)
-      setOpen(true)
-    }
-  
-    return (
-      <>
-        <Element onClick={handleOnClick} {...restElementProps} />
-        <Dialog open={open} setOpen={setOpen} dataId={dataId} data={data} setData={setData} {...dialogProps} />
-      </>
-    )
-}
+  const handleClickOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
-const Approval = () => {
-    // States
-    const [errorState, setErrorState] = useState(null);
-    // const [state, formAction] = useFormState;
+  const onSubmit = (status) => {
+    const formValues = getValues();
+    // Check if catatan is filled before opening the confirmation dialog
+    if (!formValues.catatan) {
+      toast.error('Kolom catatan harus diisi.');
+      return; // Prevent dialog from opening if catatan is empty
+    }
 
-    const [open, setOpen] = useState(false)
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        resolver: valibotResolver(schema),
-        defaultValues: {
-        catatan: "",
-        },
-    });
+    setApprovalStatus(status); // Set the approval/rejection status
+    handleClickOpen(); // Open the confirmation dialog
+  };
 
-  const onSubmit = async (data) => {
+  const handleConfirm = async () => {
+    var getIdDecrypt = DecryptData(id);
+    setLoading(true);
     
+    try {
+      const formValues = getValues();
+      const reqBody = JSON.stringify({
+        request: {
+          paper_id: parseInt(getIdDecrypt),
+          approval: approvalStatus, 
+          note: formValues.catatan,
+        },
+      });
+
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'paper/approval-paper',
+          requestBody: reqBody,
+        }),
+      });
+
+      const getResponse = await response.json();
+      if (getResponse.status === 200) {
+        toast.success('Berhasil memberikan persetujuan!');
+        setLoading(false);
+        handleClose();
+        
+        setTimeout(() => {
+          router.back();
+        }, 2000);
+      } else {
+        setLoading(false);
+        toast.error('Invalid Data');
+      }
+    } catch (error) {
+      toast.error(error.message || 'An error occurred');
+      setLoading(false);
+    }
   };
 
   return (
     <Grid item lg={12} md={12} xs={12}>
+      <Card>
+        <CardHeader title="Approval Persetujuan" />
+        <CardContent>
+          <form
+            noValidate
+            autoComplete="off"
+            onSubmit={handleSubmit(() => {})} // No need to actually submit the form here
+            className="flex flex-col gap-5"
+          >
+            <Controller
+              name="catatan"
+              control={control}
+              rules={{ required: 'Kolom harus diisi.' }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Catatan Persetujuan"
+                  placeholder=""
+                  error={!!errors.catatan}
+                  helperText={errors.catatan?.message}
+                />
+              )}
+            />
 
-        <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)}>
-            <DialogContent className='flex items-center flex-col text-center pbs-10 pbe-6 pli-10 sm:pbs-16 sm:pbe-6 sm:pli-16'>
-            <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
-
-                <Typography variant='h5'>
-                { 'Apakah kamu yakin ingin menyetujui ini?'}
-                </Typography>
-
-            </DialogContent>
-            <DialogActions className='gap-2 justify-center pbs-0 pbe-10 pli-10 sm:pbe-16 sm:pli-16'>
-            <Button variant='contained' onClick={() => handleConfirmation(true)}>
-                {'Yes, Saya setuju'}
-            </Button>
-            <Button
-                variant='outlined'
-                color='secondary'
-                onClick={() => {
-                handleConfirmation(false)
-                }}
-            >
-                Cancel
-            </Button>
-            </DialogActions>
-        </Dialog>
-        <Card>
-            <CardHeader title='Approval Persetujuan' />
-            <CardContent>
-                <form
-                    noValidate
-                    action={() => {}}
-                    autoComplete="off"
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="flex flex-col gap-5"
-                >
-                    <Controller
-                        name="catatan"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <TextField
-                            {...field}
-                            fullWidth
-                            autoFocus
-                            type="text"
-                            label="Catatan Persetujuan"
-                            onChange={(e) => {
-                                field.onChange(e.target.value);
-                                errorState !== null && setErrorState(null);
-                            }}
-                            {...((errors.catatan || errorState !== null) && {
-                                error: true,
-                                helperText: errors?.catatan?.message || errorState,
-                            })}
-                            />
-                        )}
-                    />
-                    
-                    <div className="flex justify-between items-center flex-wrap gap-x-3 gap-y-1">
-                        {/* <OpenDialogOnElementClick
-                            element={IconButton}
-                            elementProps={buttonProps('contained', 'icon', 'ri-delete-bin-7-line')}
-                            dialog={ConfirmationDialog}
-                            setData={1}
-                            data={data}
-                            dataId={data}
-                            /> */}
-                        
-                        <Button fullWidth variant="contained" color='success' type="submit">
-                        Disetujui
-                        </Button>
-                        <Button fullWidth variant="contained" color= 'error' type="submit">
-                        Ditolak
-                        </Button>
-                    </div>
-                    
-                </form>
-            </CardContent>
-        </Card>
+            <div className="flex justify-between items-center flex-wrap gap-x-3 gap-y-1">
+              <Button
+                fullWidth
+                variant="contained"
+                color="success"
+                onClick={() => onSubmit("approve")} // Pass "approve" when clicked
+              >
+                Disetujui
+              </Button>
+              <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                onClick={() => onSubmit("reject")} // Pass "reject" when clicked
+              >
+                Ditolak
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {approvalStatus === "approve" ? "Konfirmasi Persetujuan" : "Konfirmasi Penolakan"}
+        </DialogTitle>
+        <DialogContent>
+          <p>
+            {approvalStatus === "approve" 
+              ? "Apakah kamu yakin ingin memberikan persetujuan naskah ini?"
+              : "Apakah kamu yakin ingin menolak naskah ini?"}
+          </p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Batal
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Ya"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
-  )
-}
+  );
+};
 
-export default Approval
+export default Approval;

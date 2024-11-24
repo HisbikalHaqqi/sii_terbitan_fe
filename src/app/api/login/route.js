@@ -6,7 +6,6 @@ export async function POST(req) {
   try {
     const request = await req.json();
 
-    console.log("request", request);
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, {
       method: "POST",

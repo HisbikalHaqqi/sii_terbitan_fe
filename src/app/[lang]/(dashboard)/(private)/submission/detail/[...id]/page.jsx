@@ -2,7 +2,7 @@
 import PageDetail from '@/views/submission/detail/PageDetail'
 import { getServerSession } from 'next-auth'
 
-const TaskAssign = async (data) => {
+const DetailAssign = async (data) => {
 
   // const dataSession = await getServerSession()
   const getUserId = 1026
@@ -11,4 +11,4 @@ const TaskAssign = async (data) => {
   )
 }
 
-export default TaskAssign
+export default DetailAssign

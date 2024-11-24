@@ -35,8 +35,6 @@ export const authOptions = {
 
           const data = await res.json();
 
-          console.log("data----------", data);
-
           if (res.status === 200) {
             return data;
           } else {

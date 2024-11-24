@@ -11,7 +11,7 @@ export default function TimelineComponent({data,approval_posisi}) {
     }else if(data.user_id != approval_posisi){
         colorTimeline = "info"
     }else{
-        colorTimeline = "info"
+        colorTimeline = "default"
     }
     
   return (
@@ -22,14 +22,36 @@ export default function TimelineComponent({data,approval_posisi}) {
                 <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent>
-                <div className='flex flex-wrap items-center justify-between gap-x-2 mbe-2.5'>
-                    <Typography className='font-medium' color='text.primary'>{data.name} {data.role}</Typography>
-                    <Typography variant='caption'>{ConvertDate.ConvertDate(data.entry_time)}</Typography>
-                </div>
-                <div className='flex items-center gap-2.5 is-fit bg-actionHover rounded plb-[5px] pli-2.5'>
-                    <Chip label='Ditolak' size='small' color={`${data.approval_type == "approve" ? "success":"error" }`} variant='tonal' className='self-start rounded-sm' />
-                    <Typography className='font-medium' color='text.primary'>{data.entry_note}</Typography>
-                </div>
+            <div className='flex flex-wrap items-center justify-between gap-x-2 mbe-2.5'>
+                <Typography className='font-medium' color='text.primary'>{data.name} {data.role}</Typography>
+            </div>
+            {
+                data.entry_time != "" ? (
+                    <>
+                        <Typography variant='caption'>{ConvertDate.ConvertDate(data.entry_time)}</Typography>
+                        <div className='flex items-center gap-2.5 is-fit bg-actionHover rounded plb-[5px] pli-2.5'>
+                        <Chip 
+                            label='Ditolak' 
+                            size='small' 
+                            color={data.approval_type === "approve" ? "success" : "error"} 
+                            variant='tonal' 
+                            className='self-start rounded-sm' 
+                        />
+                        <Typography className='font-small' color='text.primary'>{data.entry_note}</Typography>
+                    </div>
+                    </>
+                ) : (
+                    <Chip 
+                        label='User belum melakukan approval' 
+                        size='small' 
+                        color={'default'} 
+                        variant='tonal' 
+                        className='self-start rounded-sm' 
+                    />
+                  
+                )
+            }
+
             </TimelineContent>
         </TimelineItem>
     </div>
